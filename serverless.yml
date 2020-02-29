@@ -8,3 +8,5 @@ functions:
     handler: handler.getKey
   setKey:
     handler: handler.setKey
+  listData:
+    handler: handler.listData

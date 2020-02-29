@@ -70,18 +70,37 @@ module.exports.getKey = (event, context, callback) => {
 
 //Set Data Module - POST Param Handling
 module.exports.setKey = async (event, context, callback) => {
+  var epochTimestamp = new Date().getTime().toString();
     const temp2 = {
-        TableName: "vault-dragon-data",
+        TableName: "vd-data-vault",
         Item: {
             key: event.mykey,
-            timeStamp: event.timestamp,
+            timestamp: epochTimestamp,
             value: event.value
         }
     };
     try {
-        const data = await documentClient.put(temp2).promise();
-        callback(null, data);
+        await documentClient.put(temp2).promise();
+        callback(null, "Data Added Successfully");
     } catch (error) {
-        callback("Problem adding Data")
+        callback("Problem adding Data"+error)
     }
+};
+
+//List all data from table
+module.exports.listData = (event, context, callback) => {
+  
+  const params2 = {
+    TableName: "vd-data-vault",
+    Limit: 100
+};
+documentClient.scan(params2, (err, data) => {
+    if (err) {
+      callback(err, null);
+    }
+    else{
+    callback(null, data);
+    }
+})
+
 };
