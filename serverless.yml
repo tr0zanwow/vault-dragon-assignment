@@ -1,8 +1,9 @@
-service: company-assignment
+service: vd-assignment
 provider:
   name: aws
   runtime: nodejs12.x
-  region: ap-south-1
 functions:
   getKey:
     handler: handler.getKey
+  setKey:
+    handler: handler.setKey
