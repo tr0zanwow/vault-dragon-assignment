@@ -12,23 +12,60 @@ var documentClient = new AWS.DynamoDB.DocumentClient({
 
 //Get Data module - GET Param Handling
 module.exports.getKey = (event, context, callback) => {
-    if (event.mykey == "") {
-        callback("Error : No Input specified");
-    } else {
 
-        const temp1 = {
-            TableName: "vault-dragon-data",
-            Key: {
-                key: event.mykey
-            }
-        };
-        documentClient.get(temp1, (err, data) => {
-            if (err) {
-                console.log(err)
-            }
-            callback(null, data);
-        })
+    //Check if only mkey is provided to fetch the latest version of data
+    if (event.mykey && !event.timestamp) {
+      const params = {
+        TableName: "vd-data-vault",
+        ScanIndexForward: false,
+        Limit: 1,
+        KeyConditionExpression: "#key = :mykey",
+        ExpressionAttributeNames:{
+            "#key": "key"
+        },
+        ExpressionAttributeValues: {
+            ":mykey": event.mykey
+        }
+    };
+    documentClient.query(params, (err, data) => {
+        if (err) {
+            console.log(err)
+        }
+        callback(null, data.Items);
+    })
     }
+
+    //Check if both mykey and timestamp is provided &
+    //Return the exact result if found with time stamp or return result one version lower than the specified timestamp
+    else if (event.mykey && event.timestamp) {
+
+      const params = {
+          TableName: "vd-data-vault",
+          ScanIndexForward: false,
+          Limit: 1,
+          KeyConditionExpression: "#key = :mykey AND #timestamp <= :timestamp",
+          ExpressionAttributeNames:{
+              "#key": "key",
+              "#timestamp": "timestamp"
+          },
+          ExpressionAttributeValues: {
+              ":mykey": event.mykey,
+              ":timestamp": event.timestamp
+          }
+      };
+      documentClient.query(params, (err, data) => {
+          if (err) {
+              console.log(err)
+          }
+          callback(null, data.Items);
+      })
+  }
+
+   //Check if only mykey is provided to fetch latest value
+   else {
+    callback("Error : No Proper Input specified");
+  }
+
 };
 
 //Set Data Module - POST Param Handling
